@@ -15,7 +15,7 @@ var Signal = require('signal')
 
 var Destructor = require('destructible')
 
-var coalesce = require('nascent.coalesce')
+var coalesce = require('extant')
 
 var Conduit = require('conduit')
 var Server = require('conduit/server')
