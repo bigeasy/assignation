@@ -20,6 +20,22 @@
     },
     "dependencies":
     {
+                            "abend":                        "1.0.x",
+                            "cadence":                      "1.0.x",
+                            "conduit":                      "0.4.x",
+                            "delta":                        "1.2.x",
+                            "destructible":                 "0.1.x",
+                            "downgrader":                   "0.0.2",
+                            "extant":                       "0.0.x",
+                            "interlocutor":                 "0.1.x",
+                            "monotonic":                    "2.0.x",
+                            "nascent.jacket":               "0.0.x",
+                            "nop":                          "1.0.0",
+                            "reactor":                      "2.4.x",
+                            "signal":                       "1.8.x",
+                            "staccato":                     "3.0.x",
+                            "vizsla":                       "2.0.x",
+                            "wildmap":                      "1.0.x"
     },
     "devDependencies":
     {
