@@ -1,0 +1,19 @@
+Assignation
+
+Allow two or more collaborating services to find each other through an HTTP proxy.
+
+    Discussion:     https://github.com/bigeasy/assignation/issues/1
+
+    Documentation:  https://bigeasy.github.io/assignation
+    Source:         https://github.com/bigeasy/assignation
+    Issues:         https://github.com/bigeasy/assignation/issues
+    CI:             https://travis-ci.org/bigeasy/ascension
+    Coverage:       https://coveralls.io/github/bigeasy/assignation
+
+    Install:        `npm install assignation`
+
+    License:        MIT
+
+To learn everything you want to know about Assignation start here:
+
+    http://bigeasy.github.io/assignation
