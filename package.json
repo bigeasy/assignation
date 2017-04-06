@@ -27,7 +27,7 @@
                             "destructible":                 "0.1.x",
                             "downgrader":                   "0.0.x",
                             "extant":                       "0.0.x",
-                            "interlocutor":                 "0.1.x",
+                            "interlocutor":                 "0.2.x",
                             "monotonic":                    "2.0.x",
                             "nascent.jacket":               "0.0.x",
                             "nop":                          "1.0.0",
