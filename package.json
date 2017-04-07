@@ -34,7 +34,7 @@
                             "reactor":                      "2.4.x",
                             "signal":                       "1.8.x",
                             "staccato":                     "3.0.x",
-                            "vizsla":                       "3.4.x",
+                            "vizsla":                       "3.6.x",
                             "wildmap":                      "1.0.x"
     },
     "devDependencies":
