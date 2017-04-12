@@ -32,7 +32,7 @@
                             "nascent.jacket":               "0.0.x",
                             "nop":                          "1.0.0",
                             "reactor":                      "2.4.x",
-                            "signal":                       "1.8.x",
+                            "signal":                       "1.10.x",
                             "staccato":                     "3.0.x",
                             "vizsla":                       "3.6.x",
                             "wildmap":                      "1.0.x"
