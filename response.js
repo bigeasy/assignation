@@ -12,7 +12,7 @@ function Response (interlocutor, socket, envelope) {
         rawHeaders: envelope.body.rawHeaders
     })
     this._socket = socket
-    this._socket.read.pump(this)
+    this._socket.read.pump(this, '_enqueue')
 }
 
 Response.prototype.respond = cadence(function (async) {
@@ -60,7 +60,7 @@ Response.prototype.respond = cadence(function (async) {
     })
 })
 
-Response.prototype.enqueue = cadence(function (async, envelope) {
+Response.prototype._enqueue = cadence(function (async, envelope) {
     if (envelope == null) {
         return []
     }

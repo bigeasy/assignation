@@ -14,7 +14,7 @@ var Client = require('conduit/client')
 function Rendezvous () {
     this._connections = new WildMap
     this._destructor = new Destructor
-    this._destructor.markDestroyed(this, 'destroyed')
+    this._destructor.markDestroyed(this)
     this._instance = '0'
     this.paths = []
 }
@@ -72,6 +72,7 @@ Rendezvous.prototype.upgrade = function (request, socket) {
         client: client
     }
     // TODO Instead of `abend`, some sort of cleanup and recovery.
+    // TODO Wait for `ready` to add the connection and push the path.
     connection.conduit.listen(abend)
     connections.add(parts, connection)
     paths.push(path)

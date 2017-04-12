@@ -10,7 +10,7 @@ function Request (client, request, response, rewrite) {
     this._socket = null
 }
 
-Request.prototype.enqueue = cadence(function (async, envelope) {
+Request.prototype._enqueue = cadence(function (async, envelope) {
     if (envelope == null) {
         return []
     }
@@ -41,7 +41,7 @@ Request.prototype.consume = cadence(function (async) {
         }, async())
     }, function (socket) {
         this._socket = socket
-        this._socket.read.pump(this)
+        this._socket.read.pump(this, '_enqueue')
         var readable = new Staccato.Readable(this._request)
         var loop = async(function () {
             async(function () {

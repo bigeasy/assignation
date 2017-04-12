@@ -65,7 +65,7 @@ Envoy.prototype.connect = cadence(function (async, location) {
         // Seems harsh, but once the multiplexer has been destroyed nothing is
         // going to be listening for any final messages.
         // TODO How do you feel about `bind`?
-        this._destructible.addDestructor('socket', socket, 'destory')
+        this._destructible.addDestructor('socket', socket, 'destroy')
         this._destructible.stack(async, 'connect')(function (ready) {
             this._conduit = new Conduit(socket, socket)
             this._server = new Server({
@@ -73,7 +73,9 @@ Envoy.prototype.connect = cadence(function (async, location) {
             }, 'rendezvous', this._conduit.read, this._conduit.write)
             this._destructible.addDestructor('conduit', this._conduit, 'destroy')
             this._conduit.listen(head, async())
+            this._conduit.ready.wait(ready, 'unlatch')
         })
+        this._destructible.ready.wait(this.ready, 'unlatch')
     })
 })
 
