@@ -13,7 +13,7 @@ var url = require('url')
 
 var Signal = require('signal')
 
-var Destructor = require('destructible')
+var Destructible = require('destructible')
 
 var coalesce = require('extant')
 
@@ -23,15 +23,13 @@ var Server = require('conduit/server')
 var Response = require('./response')
 
 function Envoy (middleware) {
-    this.connected = new Signal
     this._interlocutor = new Interlocutor(middleware)
     this._header = new Header
-    this._destructor = new Destructor
-    this._destructor.markDestroyed(this, 'destroyed')
+    this._destructible = new Destructible
+    this._destructible.markDestroyed(this, 'destroyed')
     this._reactor = new Reactor({ object: this, method: '_respond' })
-    this._destructor.addDestructor('connected', function () {
-        this.connected.unlatch()
-    }.bind(this))
+    this.ready = new Signal
+    this._destructible.addDestructor('connected', this.ready, 'unlatch')
 }
 
 Envoy.prototype._connect = function (socket, envelope) {
@@ -44,7 +42,7 @@ Envoy.prototype._connect = function (socket, envelope) {
 
 //
 Envoy.prototype._close = cadence(function (async) {
-    this._destructor.destroy()
+    this._destructible.destroy()
 })
 
 Envoy.prototype.close = function (callback) {
@@ -64,17 +62,16 @@ Envoy.prototype.connect = cadence(function (async, location) {
             }
         }, async())
     }, function (request, socket, head) {
-        this._destructor.addDestructor('socket', socket.destroy.bind(socket))
-        this.connected.unlatch()
         // Seems harsh, but once the multiplexer has been destroyed nothing is
         // going to be listening for any final messages.
         // TODO How do you feel about `bind`?
-        this._destructor.async(async, 'connect')(function () {
+        this._destructible.addDestructor('socket', socket, 'destory')
+        this._destructible.stack(async, 'connect')(function (ready) {
             this._conduit = new Conduit(socket, socket)
             this._server = new Server({
                 object: this, method: '_connect'
             }, 'rendezvous', this._conduit.read, this._conduit.write)
-            this._destructor.addDestructor('conduit', this._conduit.destroy.bind(this._conduit))
+            this._destructible.addDestructor('conduit', this._conduit, 'destroy')
             this._conduit.listen(head, async())
         })
     })
