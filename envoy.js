@@ -6,7 +6,6 @@ var coalesce = require('extant')
 var Interlocutor = require('interlocutor')
 var protocols = { http: require('http'), https: require('https') }
 var Upgrader = { Socket: require('downgrader/socket') }
-var Reactor = require('reactor')
 
 var Header = require('nascent.jacket')
 var url = require('url')
@@ -27,7 +26,6 @@ function Envoy (middleware) {
     this._header = new Header
     this._destructible = new Destructible
     this._destructible.markDestroyed(this, 'destroyed')
-    this._reactor = new Reactor({ object: this, method: '_respond' })
     this.ready = new Signal
     this._destructible.addDestructor('connected', this.ready, 'unlatch')
 }
