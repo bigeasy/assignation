@@ -64,16 +64,13 @@ Envoy.prototype.connect = cadence(function (async, location) {
         // going to be listening for any final messages.
         // TODO How do you feel about `bind`?
         this._destructible.addDestructor('socket', socket, 'destroy')
-        this._destructible.stack(async, 'connect')(function (ready) {
-            this._conduit = new Conduit(socket, socket)
-            this._server = new Server({
-                object: this, method: '_connect'
-            }, 'rendezvous', this._conduit.read, this._conduit.write)
-            this._destructible.addDestructor('conduit', this._conduit, 'destroy')
-            this._conduit.listen(head, async())
-            this._conduit.ready.wait(ready, 'unlatch')
-        })
-        this._destructible.ready.wait(this.ready, 'unlatch')
+        this._conduit = new Conduit(socket, socket)
+        this._conduit.ready.wait(this.ready, 'unlatch')
+        this._server = new Server({
+            object: this, method: '_connect'
+        }, 'rendezvous', this._conduit.read, this._conduit.write)
+        this._destructible.addDestructor('conduit', this._conduit, 'destroy')
+        this._conduit.listen(head, this._destructible.monitor('conduit'))
     })
 })
 
