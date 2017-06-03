@@ -71,6 +71,7 @@ Envoy.prototype.connect = cadence(function (async, location) {
         }, 'rendezvous', this._conduit.read, this._conduit.write)
         this._destructible.addDestructor('conduit', this._conduit, 'destroy')
         this._conduit.listen(head, this._destructible.monitor('conduit'))
+        this._destructible.completed(async())
     })
 })
 
