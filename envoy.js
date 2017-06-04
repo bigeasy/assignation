@@ -7,7 +7,6 @@ var Interlocutor = require('interlocutor')
 var protocols = { http: require('http'), https: require('https') }
 var Upgrader = { Socket: require('downgrader/socket') }
 
-var Header = require('nascent.jacket')
 var url = require('url')
 
 var Signal = require('signal')
@@ -23,7 +22,6 @@ var Response = require('./response')
 
 function Envoy (middleware) {
     this._interlocutor = new Interlocutor(middleware)
-    this._header = new Header
     this._destructible = new Destructible
     this._destructible.markDestroyed(this, 'destroyed')
     this.ready = new Signal
