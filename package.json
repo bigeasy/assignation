@@ -1,41 +1,48 @@
 {
-          "name": "assignation",
-          "version": "0.3.1",
-          "description": "Comparator function builder.",
-          "keywords": [
-                    "comparator",
-                    "sort"
-          ],
-          "author": "Alan Gutierrez <alan@prettyrobots.com>",
-          "homepage": "https://bigeasy.github.io/assignation",
-          "bugs": "https://github.com/bigeasy/assignation/issues",
-          "license": "MIT",
-          "repository": {
-                    "type": "git",
-                    "url": "http://github.com/bigeasy/assignation.git"
-          },
-          "dependencies": {
-                    "abend": "1.0.x",
-                    "cadence": "1.0.x",
-                    "conduit": "0.7.x",
-                    "delta": "1.2.x",
-                    "destructible": "0.12.x",
-                    "downgrader": "0.0.x",
-                    "extant": "1.0.x",
-                    "interlocutor": "0.2.x",
-                    "istanbul": "^0.4.5",
-                    "monotonic": "3.0.x",
-                    "nop": "1.0.0",
-                    "signal": "1.10.x",
-                    "staccato": "3.6.x",
-                    "vizsla": "3.6.x",
-                    "wildmap": "1.0.x"
-          },
-          "devDependencies": {
-                    "proof": "3.0.x"
-          },
-          "main": "assignation",
-          "scripts": {
-                    "test": "proof platform win32 && proof test */*.t.js || t/test"
-          }
+    "name":                 "assignation",
+    "version":              "0.3.1",
+    "description":
+
+      "Comparator function builder.",
+
+    "keywords":
+    [
+                            "comparator", "sort"
+    ],
+    "author":               "Alan Gutierrez <alan@prettyrobots.com>",
+    "homepage":             "https://bigeasy.github.io/assignation",
+    "bugs":                 "https://github.com/bigeasy/assignation/issues",
+    "license":              "MIT",
+    "repository":
+    {
+                            "type": "git",
+                            "url": "http://github.com/bigeasy/assignation.git"
+    },
+    "dependencies":
+    {
+                            "abend":                        "1.0.x",
+                            "cadence":                      "1.0.x",
+                            "conduit":                      "0.7.x",
+                            "delta":                        "1.2.x",
+                            "destructible":                 "0.12.x",
+                            "downgrader":                   "0.0.x",
+                            "extant":                       "1.0.x",
+                            "interlocutor":                 "0.2.x",
+                            "istanbul":                     "^0.4.5",
+                            "monotonic":                    "3.0.x",
+                            "nop":                          "1.0.0",
+                            "signal":                       "1.10.x",
+                            "staccato":                     "3.0.x",
+                            "vizsla":                       "3.6.x",
+                            "wildmap":                      "1.0.x"
+    },
+    "devDependencies":
+    {
+                            "proof":                        "3.0.x"
+    },
+    "main":                 "assignation",
+    "scripts":
+    {
+                            "test": "proof platform win32 && proof test */*.t.js || t/test"
+    }
 }
