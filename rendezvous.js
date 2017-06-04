@@ -5,22 +5,20 @@ var coalesce = require('extant')
 var WildMap = require('wildmap')
 var nop = require('nop')
 var url = require('url')
-var Destructor = require('destructible')
+var Destructible = require('destructible')
 var Monotonic = require('monotonic').asString
 var Request = require('./request')
 var Conduit = require('conduit')
 var Client = require('conduit/client')
+var errorify = require('./errorify')
 
 function Rendezvous () {
     this._connections = new WildMap
-    this._destructor = new Destructor
-    this._destructor.markDestroyed(this)
+    this._destructible = new Destructible('rendezvous')
+    this._destructible.markDestroyed(this)
+    this._destructible.addDestructor('close', this, '_close')
     this._instance = '0'
     this.paths = []
-}
-
-Rendezvous.prototype.listener = function (callback, request, response) {
-    this.middleware(request, response, callback)
 }
 
 Rendezvous.prototype.middleware = function (request, response, next) {
@@ -35,7 +33,7 @@ Rendezvous.prototype.middleware = function (request, response, next) {
             header.url = url.format(location)
             header.addHTTPHeader('x-rendezvous-actual-path', path)
         })
-        request.consume(function (error) { if (error) next(error) })
+        request.consume(errorify(next))
     } else {
         next()
     }
@@ -48,7 +46,8 @@ Rendezvous.prototype.upgrade = function (request, socket) {
     }
     var path = request.headers['sec-conduit-rendezvous-path']
     if (path == null) {
-        return false
+        socket.destroy()
+        return
     }
     var paths = this.paths, connections = this._connections, magazine = this._magazine
 
@@ -57,9 +56,7 @@ Rendezvous.prototype.upgrade = function (request, socket) {
     var parts = path.split('/')
 
     connections.get(parts).forEach(function (connection) {
-        if (connection.path == path) {
-            connection.close.call(null)
-        }
+        connection.close.call(null)
     })
     var conduit = new Conduit(socket, socket)
     var client = new Client('rendezvous', conduit.read, conduit.write)
@@ -95,22 +92,20 @@ Rendezvous.prototype.upgrade = function (request, socket) {
             paths.splice(paths.indexOf(path), 1)
         }
     }
-
-    return true
 }
 
 // TODO Maybe close is different from destroy?
-Rendezvous.prototype._close = cadence(function (async) {
-    async.forEach(function (path) {
+Rendezvous.prototype._close = function () {
+    this.paths.slice(0, this.paths.length).forEach(function (path) {
         this._connections.get(path.split('/')).forEach(function (connection) {
             connection.conduit.destroy()
             connection.socket.destroy()
         })
-    })(this.paths.slice(0, this.paths.length))
-})
+    }, this)
+}
 
-Rendezvous.prototype.close = function (callback) {
-    this._close(coalesce(callback, abend))
+Rendezvous.prototype.destroy = function () {
+    this._destructible.destroy()
 }
 
 module.exports = Rendezvous

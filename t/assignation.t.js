@@ -1,6 +1,7 @@
-require('proof')(1, require('cadence')(prove))
+require('proof')(6, require('cadence')(prove))
 
 function prove (async, assert) {
+    var delta = require('delta')
     var abend = require('abend')
     var http = require('http')
     var Rendezvous = require('../rendezvous')
@@ -11,15 +12,32 @@ function prove (async, assert) {
     var upgrader = new Upgrader
     var sockets = []
     var rendezvous = new Rendezvous
+    rendezvous.upgrade({
+        headers: {}
+    }, {
+        destroy: function () {
+            assert(true, 'missing protocol identification header')
+        }
+    }, null)
     upgrader.on('socket', rendezvous.upgrade.bind(rendezvous))
-    var server = http.createServer(rendezvous.listener.bind(rendezvous, function (error) {
-        if (error) throw error
-    }))
+    var server = http.createServer(function (request, response) {
+        rendezvous.middleware(request, response, function (error) {
+            response.writeHead(error ? 503 : 404, { 'content-type': 'text/plain' })
+            response.write('error')
+            response.end()
+        })
+    })
     server.on('upgrade', function (request, socket, head) {
         upgrader.upgrade(request, socket, head)
     })
     async(function () {
         server.listen(8088, '127.0.0.1', async())
+    }, function () {
+        ua.fetch({
+            url: 'http://127.0.0.1:8088/identifier/hello',
+        }, async())
+    }, function (body, response) {
+        assert(response.statusCode, 404, 'http request')
     }, function () {
         var envoy = new Envoy(function (request, response) {
             response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
@@ -35,7 +53,75 @@ function prove (async, assert) {
         }, function (message) {
             assert(message, 'Hello, World!', 'body')
             envoy.close()
-            rendezvous.close(async())
+            setTimeout(async(), 250)
+        }, function () {
+            rendezvous.destroy()
+        }, function () {
+            server.close(async())
+        }, function () {
+            rendezvous.upgrade(null, {
+                destroy: function () {
+                    assert(true, 'was destroyed')
+                }
+            }, null)
+        })
+    }, function () {
+        upgrader = new Upgrader
+        rendezvous = new Rendezvous
+        upgrader.on('socket', rendezvous.upgrade.bind(rendezvous))
+        server = http.createServer(function (request, response) {
+            rendezvous.middleware(request, response, function (error) {
+                response.writeHead(error ? 503 : 404, { 'content-type': 'text/plain' })
+                response.write('error')
+                response.end()
+            })
+        })
+        server.on('upgrade', function (request, socket, head) {
+            upgrader.upgrade(request, socket, head)
+        })
+        server.listen(8088, '127.0.0.1', async())
+    }, function () {
+        var envoy2, envoy1, envoy
+        async(function () {
+            envoy2 = new Envoy(function (request, response) {
+                assert(true, 'selected')
+                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
+                response.write('Hello, World!')
+                response.end()
+            })
+            envoy2.connect('http://127.0.0.1:8088/identifier/key', abend)
+            envoy2.ready.wait(async())
+        }, function () {
+            envoy1 = new Envoy(function (request, response) {
+                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
+                response.write('Hello, World!')
+                response.end()
+            })
+            envoy1.connect('http://127.0.0.1:8088/identifier', abend)
+            envoy1.ready.wait(async())
+        }, function () {
+            envoy = new Envoy(function (request, response) {
+                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
+                response.write('Hello, World!')
+                response.end()
+            })
+            envoy.connect('http://127.0.0.1:8088/identifier', abend)
+            envoy.ready.wait(async())
+        }, function () {
+            envoy1.close()
+        }, function () {
+            setTimeout(async(), 1000)
+        }, function () {
+            ua.fetch({
+                url: 'http://127.0.0.1:8088/identifier/key/hello',
+                post: {}
+            }, async())
+        }, function (message, response) {
+            assert(message, 'Hello, World!', 'body')
+            rendezvous.destroy()
+        }, function () {
+            envoy.close()
+            envoy2.close()
         }, function () {
             server.close(async())
         })
