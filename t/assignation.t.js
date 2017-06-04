@@ -29,7 +29,8 @@ function prove (async, assert) {
         envoy.connect('http://127.0.0.1:8088/identifier', abend)
         async(function () {
             ua.fetch({
-                url: 'http://127.0.0.1:8088/identifier/hello'
+                url: 'http://127.0.0.1:8088/identifier/hello',
+                post: {}
             }, async())
         }, function (message) {
             assert(message, 'Hello, World!', 'body')
