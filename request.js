@@ -1,12 +1,28 @@
+// Control-flow utilities.
 var cadence = require('cadence')
-var Header = require('./header')
+
+// Read and write streams with error-first callbacks.
 var Staccato = require('staccato')
 
+// Return the first not null-like value.
+var coalesce = require('extant')
+
+// Do nothing.
+var nop = require('nop')
+
+// Proxied header constructor.
+var Header = require('./header')
+
+// Create a new request that proxies the given Node.js HTTP request and response
+// through the given Conduit client. An optional rewrite function can be used to
+// amend the HTTP headers before the request is proxied.
+
+//
 function Request (client, request, response, rewrite) {
     this._client = client
     this._request = request
     this._response = response
-    this._rewrite = rewrite || nop
+    this._rewrite = coalesce(rewrite, nop)
     this._socket = null
 }
 
