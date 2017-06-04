@@ -3,7 +3,7 @@
     "version":              "0.3.1",
     "description":
 
-      "Comparator function builder.",
+      "Allow two or more collaborating services to find each other through an HTTP proxy.",
 
     "keywords":
     [
