@@ -39,13 +39,25 @@ function prove (async, assert) {
     }, function (body, response) {
         assert(response.statusCode, 404, 'http request')
     }, function () {
+        var request = http.request({
+            host: '127.0.0.1',
+            port: 8088,
+            headers: Envoy.headers('/identifier', {
+                host: '127.0.0.1:8088'
+            })
+        })
+        delta(async()).ee(request).on('upgrade')
+        request.end()
+    }, function (request, socket, head) {
         var envoy = new Envoy(function (request, response) {
             response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
             response.write('Hello, World!')
             response.end()
         })
-        envoy.connect('http://127.0.0.1:8088/identifier', abend)
+        envoy.connect(request, socket, head, abend)
         async(function () {
+            envoy.ready.wait(async())
+        }, function () {
             ua.fetch({
                 url: 'http://127.0.0.1:8088/identifier/hello',
                 post: {}
@@ -83,29 +95,59 @@ function prove (async, assert) {
     }, function () {
         var envoy2, envoy1, envoy
         async(function () {
+            var request = http.request({
+                host: '127.0.0.1',
+                port: 8088,
+                headers: Envoy.headers('/identifier/key', {
+                    host: '127.0.0.1:8088'
+                })
+            })
+            delta(async()).ee(request).on('upgrade')
+            request.end()
+        }, function (request, socket, head) {
             envoy2 = new Envoy(function (request, response) {
                 assert(true, 'selected')
                 response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
                 response.write('Hello, World!')
                 response.end()
             })
-            envoy2.connect('http://127.0.0.1:8088/identifier/key', abend)
+            envoy2.connect(request, socket, head, abend)
             envoy2.ready.wait(async())
         }, function () {
+            var request = http.request({
+                host: '127.0.0.1',
+                port: 8088,
+                headers: Envoy.headers('/identifier', {
+                    host: '127.0.0.1:8088'
+                })
+            })
+            delta(async()).ee(request).on('upgrade')
+            request.end()
+        }, function (request, socket, head) {
             envoy1 = new Envoy(function (request, response) {
                 response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
                 response.write('Hello, World!')
                 response.end()
             })
-            envoy1.connect('http://127.0.0.1:8088/identifier', abend)
+            envoy1.connect(request, socket, head, abend)
             envoy1.ready.wait(async())
         }, function () {
+            var request = http.request({
+                host: '127.0.0.1',
+                port: 8088,
+                headers: Envoy.headers('/identifier', {
+                    host: '127.0.0.1:8088'
+                })
+            })
+            delta(async()).ee(request).on('upgrade')
+            request.end()
+        }, function (request, socket, head) {
             envoy = new Envoy(function (request, response) {
                 response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
                 response.write('Hello, World!')
                 response.end()
             })
-            envoy.connect('http://127.0.0.1:8088/identifier', abend)
+            envoy.connect(request, socket, head, abend)
             envoy.ready.wait(async())
         }, function () {
             envoy1.close()

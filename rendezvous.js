@@ -44,7 +44,7 @@ Rendezvous.prototype.upgrade = function (request, socket) {
         socket.destroy()
         return
     }
-    var path = request.headers['sec-conduit-rendezvous-path']
+    var path = request.headers['x-rendezvous-path']
     if (path == null) {
         socket.destroy()
         return
