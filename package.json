@@ -32,7 +32,7 @@
                             "monotonic":                    "3.0.x",
                             "nop":                          "1.0.0",
                             "signal":                       "1.10.x",
-                            "staccato":                     "3.6.x",
+                            "staccato":                     "3.8.x",
                             "wildmap":                      "1.0.x"
     },
     "devDependencies":
