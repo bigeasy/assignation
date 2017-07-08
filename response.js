@@ -1,8 +1,9 @@
 var cadence = require('cadence')
 var delta = require('delta')
 var Staccato = require('staccato')
+var Procession = require('procession')
 
-function Response (interlocutor, socket, envelope) {
+function Response (interlocutor, envelope) {
     var headers = envelope.body.headers
     this._request = interlocutor.request({
         httpVersion: envelope.body.httpVersion,
@@ -11,16 +12,17 @@ function Response (interlocutor, socket, envelope) {
         headers: headers,
         rawHeaders: envelope.body.rawHeaders
     })
-    this._socket = socket
-    this._socket.read.pump(this, '_enqueue')
+    this.read = new Procession
+    this.write = new Procession
+    this.write.shifter().pump(this, '_enqueue')
 }
 
-Response.prototype.respond = cadence(function (async) {
+Response.prototype.listen = cadence(function (async) {
     async(function () {
         delta(async()).ee(this._request).on('response')
     }, function (response) {
         async(function () {
-            this._socket.write.enqueue({
+            this.read.enqueue({
                 module: 'rendezvous',
                 method: 'header',
                 body: {
@@ -38,7 +40,7 @@ Response.prototype.respond = cadence(function (async) {
                     if (buffer == null) {
                         return [ loop.break ]
                     }
-                    this._socket.write.enqueue({
+                    this.read.enqueue({
                         module: 'rendezvous',
                         method: 'chunk',
                         body: buffer
@@ -47,13 +49,13 @@ Response.prototype.respond = cadence(function (async) {
             })()
         }, function () {
             // TODO Use Conduit framing, use this only for actual trailers.
-            this._socket.write.enqueue({
+            this.read.enqueue({
                 module: 'rendezvous',
                 method: 'trailer',
                 body: null
             }, async())
         }, function () {
-            this._socket.write.enqueue(null, async())
+            this.read.enqueue(null, async())
         })
     }, function () {
         return []

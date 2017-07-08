@@ -58,8 +58,8 @@ Rendezvous.prototype.upgrade = function (request, socket) {
     connections.get(parts).forEach(function (connection) {
         connection.close.call(null)
     })
-    var conduit = new Conduit(socket, socket)
-    var client = new Client('rendezvous', conduit.read, conduit.write)
+    var client = new Client
+    var conduit = new Conduit(socket, socket, client)
     var connection = {
         path: path,
         close: close,
@@ -70,7 +70,7 @@ Rendezvous.prototype.upgrade = function (request, socket) {
     }
     // TODO Instead of `abend`, some sort of cleanup and recovery.
     // TODO Wait for `ready` to add the connection and push the path.
-    connection.conduit.listen(abend)
+    connection.conduit.listen(null, abend)
     connections.add(parts, connection)
     paths.push(path)
 

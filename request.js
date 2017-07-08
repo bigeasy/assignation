@@ -13,6 +13,9 @@ var nop = require('nop')
 // Proxied header constructor.
 var Header = require('./header')
 
+// An evented message queue.
+var Procession = require('procession')
+
 // Create a new request that proxies the given Node.js HTTP request and response
 // through the given Conduit client. An optional rewrite function can be used to
 // amend the HTTP headers before the request is proxied.
@@ -23,7 +26,9 @@ function Request (client, request, response, rewrite) {
     this._request = request
     this._response = response
     this._rewrite = coalesce(rewrite, nop)
-    this._socket = null
+    this.read = new Procession
+    this.write = new Procession
+    this.write.shifter().pump(this, '_enqueue')
 }
 
 Request.prototype._enqueue = cadence(function (async, envelope) {
@@ -54,10 +59,7 @@ Request.prototype.consume = cadence(function (async) {
             module: 'rendezvous',
             method: 'header',
             body: header
-        }, async())
-    }, function (socket) {
-        this._socket = socket
-        this._socket.read.pump(this, '_enqueue')
+        }, this)
         var readable = new Staccato.Readable(this._request)
         var loop = async(function () {
             async(function () {
@@ -66,7 +68,7 @@ Request.prototype.consume = cadence(function (async) {
                 if (buffer == null) {
                     return [ loop.break ]
                 }
-                this._socket.write.enqueue({
+                this.read.enqueue({
                     module: 'rendezvous',
                     method: 'chunk',
                     body: buffer
@@ -74,13 +76,13 @@ Request.prototype.consume = cadence(function (async) {
             })
         })()
     }, function () {
-        this._socket.write.enqueue({
+        this.read.enqueue({
             module: 'rendezvous',
             method: 'trailer',
             body: null
         }, async())
     }, function () {
-        this._socket.write.enqueue(null, async())
+        this.read.enqueue(null, async())
     })
 })
 

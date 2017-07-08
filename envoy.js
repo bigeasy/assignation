@@ -23,16 +23,19 @@ var Downgrader = require('downgrader')
 var Response = require('./response')
 
 function Envoy (middleware) {
+    this._request = 0
     this._interlocutor = new Interlocutor(middleware)
-    this._destructible = new Destructible
+    this._destructible = new Destructible('envoy')
     this._destructible.markDestroyed(this, 'destroyed')
     this.ready = new Signal
     this._destructible.addDestructor('connected', this.ready, 'unlatch')
 }
 
-Envoy.prototype._connect = function (socket, envelope) {
+Envoy.prototype._connect = function (envelope) {
     // TODO Instead of abend, something that would stop the request.
-    new Response(this._interlocutor, socket, envelope).respond(abend)
+    var response = new Response(this._interlocutor, envelope)
+    response.listen(this._destructible.rescue([ 'respond', this._request++ ]))
+    return response
 }
 
 // TODO Not sure exactly how to shutdown all the individual sockets but probably
@@ -56,14 +59,12 @@ Envoy.headers = function (path, headers) {
 Envoy.prototype.connect = cadence(function (async, request, socket, head) {
     // Seems harsh, but once the multiplexer has been destroyed nothing is going
     // to be listening for any final messages.
-    // TODO How do you feel about `bind`?
     this._destructible.addDestructor('socket', socket, 'destroy')
-    this._conduit = new Conduit(socket, socket)
+    this._server = new Server(this, '_connect')
+    this._conduit = new Conduit(socket, socket, this._server)
     this._conduit.ready.wait(this.ready, 'unlatch')
-    this._server = new Server({
-        object: this, method: '_connect'
-    }, 'rendezvous', this._conduit.read, this._conduit.write)
     this._destructible.addDestructor('conduit', this._conduit, 'destroy')
+    // TODO Do you pass the ready listener into the connection function?
     this._conduit.listen(head, this._destructible.monitor('conduit'))
     this._destructible.completed(async())
 })
