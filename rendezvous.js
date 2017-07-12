@@ -46,6 +46,7 @@ Rendezvous.prototype.upgrade = function (request, socket) {
     }
     var path = request.headers['x-rendezvous-path']
     if (path == null) {
+        console.log('buh bye', request.headers)
         socket.destroy()
         return
     }

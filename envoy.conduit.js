@@ -22,46 +22,23 @@ var Downgrader = require('downgrader')
 
 var Response = require('./response')
 
-function Envoy (middleware) {
+function Envoy (ware) {
     this._request = 0
-    this._interlocutor = new Interlocutor(middleware)
-    this._destructible = new Destructible('envoy')
+    this._destructible = new Destructible('conduit.envoy')
     this._destructible.markDestroyed(this, 'destroyed')
     this.ready = new Signal
     this._destructible.addDestructor('connected', this.ready, 'unlatch')
 }
 
-Envoy.prototype._connect = function (envelope) {
-    // TODO Instead of abend, something that would stop the request.
-    var response = new Response(this._interlocutor, envelope)
-    response.listen(this._destructible.rescue([ 'respond', this._request++ ]))
-    return response
-}
-
-// TODO Not sure exactly how to shutdown all the individual sockets but probably
-// they're going to have to see an end-of-stream and shutdown.
-
-//
-Envoy.prototype._close = cadence(function (async) {
+Envoy.prototype.close = function () {
     this._destructible.destroy()
-})
-
-Envoy.prototype.close = function (callback) {
-    this._close(coalesce(callback, abend))
 }
 
-Envoy.headers = function (path, headers) {
-    headers = Downgrader.headers(headers)
-    headers['x-rendezvous-path'] = path
-    return headers
-}
-
-Envoy.prototype.connect = cadence(function (async, request, socket, head) {
+Envoy.prototype.connect = cadence(function (async, server, request, socket, head) {
     // Seems harsh, but once the multiplexer has been destroyed nothing is going
     // to be listening for any final messages.
     this._destructible.addDestructor('socket', socket, 'destroy')
-    this._server = new Server(this, '_connect')
-    this._conduit = new Conduit(socket, socket, this._server)
+    this._conduit = new Conduit(socket, socket, server)
     this._conduit.ready.wait(this.ready, 'unlatch')
     this._destructible.addDestructor('conduit', this._conduit, 'destroy')
     // TODO Do you pass the ready listener into the connection function?
