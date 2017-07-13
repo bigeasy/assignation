@@ -4,7 +4,10 @@ function prove (async, assert) {
     var delta = require('delta')
     var abend = require('abend')
     var http = require('http')
-    var Rendezvous = require('../rendezvous')
+    var Rendezvous = {
+        Conduit: require('../rendezvous.conduit'),
+        Middleware: require('../rendezvous.middleware')
+    }
     var Envoy = {
         Conduit: require('../envoy.conduit'),
         Middleware: require('../envoy.middleware')
@@ -14,17 +17,22 @@ function prove (async, assert) {
     var Upgrader = require('downgrader')
     var upgrader = new Upgrader
     var sockets = []
-    var rendezvous = new Rendezvous
-    rendezvous.upgrade({
+
+    var rendezvous = {
+        conduit: null,
+        middleware: new Rendezvous.Middleware
+    }
+    rendezvous.conduit = new Rendezvous.Conduit(rendezvous.middleware, 'upgrade')
+    rendezvous.conduit.upgrade({
         headers: {}
     }, {
         destroy: function () {
             assert(true, 'missing protocol identification header')
         }
     }, null)
-    upgrader.on('socket', rendezvous.upgrade.bind(rendezvous))
+    upgrader.on('socket', rendezvous.conduit.upgrade.bind(rendezvous.conduit))
     var server = http.createServer(function (request, response) {
-        rendezvous.middleware(request, response, function (error) {
+        rendezvous.middleware.middleware(request, response, function (error) {
             response.writeHead(error ? 503 : 404, { 'content-type': 'text/plain' })
             response.write('error')
             response.end()
@@ -75,11 +83,12 @@ function prove (async, assert) {
             envoy.middleware.destroy()
             setTimeout(async(), 250)
         }, function () {
-            rendezvous.destroy()
+            rendezvous.middleware.destroy()
+            rendezvous.conduit.destroy()
         }, function () {
             server.close(async())
         }, function () {
-            rendezvous.upgrade(null, {
+            rendezvous.conduit.upgrade(null, {
                 destroy: function () {
                     assert(true, 'was destroyed')
                 }
@@ -87,10 +96,14 @@ function prove (async, assert) {
         })
     }, function () {
         upgrader = new Upgrader
-        rendezvous = new Rendezvous
-        upgrader.on('socket', rendezvous.upgrade.bind(rendezvous))
+        rendezvous = {
+            conduit: null,
+            middleware: new Rendezvous.Middleware
+        }
+        rendezvous.conduit = new Rendezvous.Conduit(rendezvous.middleware, 'upgrade')
+        upgrader.on('socket', rendezvous.conduit.upgrade.bind(rendezvous.conduit))
         server = http.createServer(function (request, response) {
-            rendezvous.middleware(request, response, function (error) {
+            rendezvous.middleware.middleware(request, response, function (error) {
                 response.writeHead(error ? 503 : 404, { 'content-type': 'text/plain' })
                 response.write('error')
                 response.end()
@@ -181,7 +194,8 @@ function prove (async, assert) {
             }, async())
         }, function (message, response) {
             assert(message, 'Hello, World!', 'body')
-            rendezvous.destroy()
+            rendezvous.middleware.destroy()
+            rendezvous.conduit.destroy()
         }, function () {
             envoy.conduit.close()
             envoy.middleware.destroy()
