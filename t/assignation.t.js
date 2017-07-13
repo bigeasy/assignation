@@ -4,35 +4,24 @@ function prove (async, assert) {
     var delta = require('delta')
     var abend = require('abend')
     var http = require('http')
-    var Rendezvous = {
-        Conduit: require('../rendezvous.conduit'),
-        Middleware: require('../rendezvous.middleware')
-    }
-    var Envoy = {
-        Conduit: require('../envoy.conduit'),
-        Middleware: require('../envoy.middleware')
-    }
+    var Rendezvous = require('../rendezvous')
+    var Envoy = require('../envoy')
     var UserAgent = require('vizsla')
     var ua = new UserAgent
     var Upgrader = require('downgrader')
     var upgrader = new Upgrader
     var sockets = []
-
-    var rendezvous = {
-        conduit: null,
-        middleware: new Rendezvous.Middleware
-    }
-    rendezvous.conduit = new Rendezvous.Conduit(rendezvous.middleware, 'upgrade')
-    rendezvous.conduit.upgrade({
+    var rendezvous = new Rendezvous
+    rendezvous.upgrade({
         headers: {}
     }, {
         destroy: function () {
             assert(true, 'missing protocol identification header')
         }
     }, null)
-    upgrader.on('socket', rendezvous.conduit.upgrade.bind(rendezvous.conduit))
+    upgrader.on('socket', rendezvous.upgrade.bind(rendezvous))
     var server = http.createServer(function (request, response) {
-        rendezvous.middleware.middleware(request, response, function (error) {
+        rendezvous.middleware(request, response, function (error) {
             response.writeHead(error ? 503 : 404, { 'content-type': 'text/plain' })
             response.write('error')
             response.end()
@@ -53,25 +42,21 @@ function prove (async, assert) {
         var request = http.request({
             host: '127.0.0.1',
             port: 8088,
-            headers: Envoy.Middleware.headers('/identifier', {
+            headers: Envoy.headers('/identifier', {
                 host: '127.0.0.1:8088'
             })
         })
         delta(async()).ee(request).on('upgrade')
         request.end()
     }, function (request, socket, head) {
-        var envoy = {
-            middleware: new Envoy.Middleware(function (request, response) {
-                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
-                response.write('Hello, World!')
-                response.end()
-            }),
-            conduit: new Envoy.Conduit
-        }
-        envoy.middleware.listen(abend)
-        envoy.conduit.connect(envoy.middleware.server, request, socket, head, abend)
+        var envoy = new Envoy(function (request, response) {
+            response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
+            response.write('Hello, World!')
+            response.end()
+        })
+        envoy.connect(request, socket, head, abend)
         async(function () {
-            envoy.conduit.ready.wait(async())
+            envoy.ready.wait(async())
         }, function () {
             ua.fetch({
                 url: 'http://127.0.0.1:8088/identifier/hello',
@@ -79,16 +64,14 @@ function prove (async, assert) {
             }, async())
         }, function (message) {
             assert(message, 'Hello, World!', 'body')
-            envoy.conduit.close()
-            envoy.middleware.destroy()
+            envoy.close()
             setTimeout(async(), 250)
         }, function () {
-            rendezvous.middleware.destroy()
-            rendezvous.conduit.destroy()
+            rendezvous.destroy()
         }, function () {
             server.close(async())
         }, function () {
-            rendezvous.conduit.upgrade(null, {
+            rendezvous.upgrade(null, {
                 destroy: function () {
                     assert(true, 'was destroyed')
                 }
@@ -96,14 +79,10 @@ function prove (async, assert) {
         })
     }, function () {
         upgrader = new Upgrader
-        rendezvous = {
-            conduit: null,
-            middleware: new Rendezvous.Middleware
-        }
-        rendezvous.conduit = new Rendezvous.Conduit(rendezvous.middleware, 'upgrade')
-        upgrader.on('socket', rendezvous.conduit.upgrade.bind(rendezvous.conduit))
+        rendezvous = new Rendezvous
+        upgrader.on('socket', rendezvous.upgrade.bind(rendezvous))
         server = http.createServer(function (request, response) {
-            rendezvous.middleware.middleware(request, response, function (error) {
+            rendezvous.middleware(request, response, function (error) {
                 response.writeHead(error ? 503 : 404, { 'content-type': 'text/plain' })
                 response.write('error')
                 response.end()
@@ -119,72 +98,59 @@ function prove (async, assert) {
             var request = http.request({
                 host: '127.0.0.1',
                 port: 8088,
-                headers: Envoy.Middleware.headers('/identifier/key', {
+                headers: Envoy.headers('/identifier/key', {
                     host: '127.0.0.1:8088'
                 })
             })
             delta(async()).ee(request).on('upgrade')
             request.end()
         }, function (request, socket, head) {
-            envoy2 = {
-                middleware: new Envoy.Middleware(function (request, response) {
-                    assert(true, 'selected')
-                    response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
-                    response.write('Hello, World!')
-                    response.end()
-                }),
-                conduit: new Envoy.Conduit
-            }
-            envoy2.middleware.listen(abend)
-            envoy2.conduit.connect(envoy2.middleware.server, request, socket, head, abend)
-            envoy2.conduit.ready.wait(async())
+            envoy2 = new Envoy(function (request, response) {
+                assert(true, 'selected')
+                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
+                response.write('Hello, World!')
+                response.end()
+            })
+            envoy2.connect(request, socket, head, abend)
+            envoy2.ready.wait(async())
         }, function () {
             var request = http.request({
                 host: '127.0.0.1',
                 port: 8088,
-                headers: Envoy.Middleware.headers('/identifier', {
+                headers: Envoy.headers('/identifier', {
                     host: '127.0.0.1:8088'
                 })
             })
             delta(async()).ee(request).on('upgrade')
             request.end()
         }, function (request, socket, head) {
-            envoy1 = {
-                middleware: new Envoy.Middleware(function (request, response) {
-                    response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
-                    response.write('Hello, World!')
-                    response.end()
-                }),
-                conduit: new Envoy.Conduit
-            }
-            envoy1.middleware.listen(abend)
-            envoy1.conduit.connect(envoy1.middleware.server, request, socket, head, abend)
-            envoy1.conduit.ready.wait(async())
+            envoy1 = new Envoy(function (request, response) {
+                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
+                response.write('Hello, World!')
+                response.end()
+            })
+            envoy1.connect(request, socket, head, abend)
+            envoy1.ready.wait(async())
         }, function () {
             var request = http.request({
                 host: '127.0.0.1',
                 port: 8088,
-                headers: Envoy.Middleware.headers('/identifier', {
+                headers: Envoy.headers('/identifier', {
                     host: '127.0.0.1:8088'
                 })
             })
             delta(async()).ee(request).on('upgrade')
             request.end()
         }, function (request, socket, head) {
-            envoy = {
-                middleware: new Envoy.Middleware(function (request, response) {
-                    response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
-                    response.write('Hello, World!')
-                    response.end()
-                }),
-                conduit: new Envoy.Conduit
-            }
-            envoy.middleware.listen(abend)
-            envoy.conduit.connect(envoy.middleware.server, request, socket, head, abend)
-            envoy.conduit.ready.wait(async())
+            envoy = new Envoy(function (request, response) {
+                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
+                response.write('Hello, World!')
+                response.end()
+            })
+            envoy.connect(request, socket, head, abend)
+            envoy.ready.wait(async())
         }, function () {
-            envoy1.conduit.close()
-            envoy1.middleware.destroy()
+            envoy1.close()
         }, function () {
             setTimeout(async(), 1000)
         }, function () {
@@ -194,13 +160,10 @@ function prove (async, assert) {
             }, async())
         }, function (message, response) {
             assert(message, 'Hello, World!', 'body')
-            rendezvous.middleware.destroy()
-            rendezvous.conduit.destroy()
+            rendezvous.destroy()
         }, function () {
-            envoy.conduit.close()
-            envoy.middleware.destroy()
-            envoy2.conduit.close()
-            envoy2.middleware.destroy()
+            envoy.close()
+            envoy2.close()
         }, function () {
             server.close(async())
         })
