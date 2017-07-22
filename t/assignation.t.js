@@ -106,7 +106,7 @@ function prove (async, assert) {
             request.end()
         }, function (request, socket, head) {
             envoy2 = new Envoy(function (request, response) {
-                assert(true, 'selected')
+                assert(request.url, '/hello', 'hello')
                 response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
                 response.write('Hello, World!')
                 response.end()

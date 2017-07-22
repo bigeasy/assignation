@@ -8,7 +8,7 @@ function Response (interlocutor, envelope) {
     this._request = interlocutor.request({
         httpVersion: envelope.body.httpVersion,
         method: envelope.body.method,
-        url: envelope.body.url,
+        path: envelope.body.url,
         headers: headers,
         rawHeaders: envelope.body.rawHeaders
     })
