@@ -33,7 +33,7 @@
                             "nop":                          "1.0.0",
                             "procession":                   "0.9.x",
                             "signal":                       "3.0.x",
-                            "staccato":                     "3.8.x",
+                            "staccato":                     "5.0.x",
                             "wildmap":                      "1.0.x"
     },
     "devDependencies":
