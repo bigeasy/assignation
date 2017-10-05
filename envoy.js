@@ -25,7 +25,7 @@ var Response = require('./response')
 function Envoy (middleware) {
     this._request = 0
     this._interlocutor = new Interlocutor(middleware)
-    this._destructible = new Destructible('envoy')
+    this._destructible = new Destructible(1000, 'envoy')
     this._destructible.markDestroyed(this, 'destroyed')
     this.ready = new Signal
     this._destructible.addDestructor('connected', this.ready, 'unlatch')
@@ -66,7 +66,7 @@ Envoy.prototype.connect = cadence(function (async, request, socket, head) {
     this._destructible.addDestructor('conduit', this._conduit, 'destroy')
     // TODO Do you pass the ready listener into the connection function?
     this._conduit.listen(head, this._destructible.monitor('conduit'))
-    this._destructible.completed(async())
+    this._destructible.completed.wait(async())
 })
 
 module.exports = Envoy
