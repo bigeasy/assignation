@@ -1,6 +1,6 @@
 {
     "name":                 "assignation",
-    "version":              "0.12.5",
+    "version":              "0.12.6",
     "description":
 
       "Allow two or more collaborating services to find each other through an HTTP proxy.",
