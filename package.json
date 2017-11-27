@@ -27,7 +27,7 @@
                             "destructible":                 "0.17.x",
                             "downgrader":                   "0.1.x",
                             "extant":                       "1.0.x",
-                            "interlocutor":                 "0.3.x",
+                            "interlocutor":                 "0.5.x",
                             "monotonic":                    "3.0.x",
                             "nop":                          "1.0.0",
                             "procession":                   "0.9.x",
