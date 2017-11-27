@@ -28,11 +28,10 @@
                             "downgrader":                   "0.1.x",
                             "extant":                       "1.0.x",
                             "interlocutor":                 "0.3.x",
-                            "istanbul":                     "^0.4.5",
                             "monotonic":                    "3.0.x",
                             "nop":                          "1.0.0",
                             "procession":                   "0.9.x",
-                            "signal":                       "3.0.x",
+                            "signal":                       "3.2.x",
                             "staccato":                     "5.0.x",
                             "wildmap":                      "1.0.x"
     },
