@@ -82,6 +82,7 @@ Request.prototype.consume = cadence(function (async) {
             body: null
         }, async())
     }, function () {
+        console.log('request end')
         this.read.enqueue(null, async())
     })
 })

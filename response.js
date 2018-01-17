@@ -55,6 +55,7 @@ Response.prototype.listen = cadence(function (async) {
                 body: null
             }, async())
         }, function () {
+            console.log('response end')
             this.read.enqueue(null, async())
         })
     }, function () {
