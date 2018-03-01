@@ -22,6 +22,8 @@ var Downgrader = require('downgrader')
 
 var Response = require('./response')
 
+var interrupt = require('interrupt').createInterrupter('assignation')
+
 function Envoy (middleware) {
     this._request = 0
     this._interlocutor = new Interlocutor(middleware)
@@ -55,6 +57,15 @@ Envoy.headers = function (path, headers) {
     headers['x-rendezvous-path'] = path
     return headers
 }
+
+Envoy.prototype.stack = cadence(function (async, initializer, socket, head) {
+    interrupt.assert(this._destroy.open == null, 'destroyed')
+    this._destroy.wait(socket, 'destroy')
+    this._conduit = new Conduit(socket, socket, this._server)
+    this._destroy.wait(this._conduit, 'destroy')
+    this._conduit.listen(head, async())
+    iniitalizer.ready()
+})
 
 Envoy.prototype.connect = cadence(function (async, request, socket, head) {
     // Seems harsh, but once the multiplexer has been destroyed nothing is going
