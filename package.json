@@ -24,7 +24,7 @@
                             "cadence":                      "1.0.x",
                             "conduit":                      "0.16.x",
                             "delta":                        "1.2.x",
-                            "destructible":                 "0.17.x",
+                            "destructible":                 "0.22.x",
                             "downgrader":                   "0.1.x",
                             "extant":                       "1.0.x",
                             "interlocutor":                 "0.5.x",

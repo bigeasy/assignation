@@ -16,7 +16,7 @@ function Rendezvous () {
     this._connections = new WildMap
     this._destructible = new Destructible('rendezvous')
     this._destructible.markDestroyed(this)
-    this._destructible.addDestructor('close', this, '_close')
+    this._destructible.destruct.wait(this, '_close')
     this._instance = '0'
     this.paths = []
 }
