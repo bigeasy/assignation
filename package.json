@@ -22,15 +22,15 @@
     {
                             "abend":                        "1.0.x",
                             "cadence":                      "1.0.x",
-                            "conduit":                      "0.16.x",
+                            "conduit":                      "2.5.x",
                             "delta":                        "1.2.x",
-                            "destructible":                 "0.22.x",
+                            "destructible":                 "0.27.x",
                             "downgrader":                   "0.1.x",
                             "extant":                       "1.0.x",
                             "interlocutor":                 "0.5.x",
                             "monotonic":                    "3.0.x",
                             "nop":                          "1.0.0",
-                            "procession":                   "0.9.x",
+                            "procession":                   "0.15.x",
                             "signal":                       "3.4.x",
                             "staccato":                     "5.0.x",
                             "wildmap":                      "1.0.x"
