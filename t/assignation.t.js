@@ -1,4 +1,4 @@
-require('proof')(6, require('cadence')(prove))
+require('proof')(5, require('cadence')(prove))
 
 function prove (async, assert) {
     var delta = require('delta')
@@ -14,16 +14,6 @@ function prove (async, assert) {
     var sockets = []
 
     var destructible = new Destructible('t/assignation.t.js')
-
-    /*
-    rendezvous.upgrade({
-        headers: {}
-    }, {
-        destroy: function () {
-            assert(true, 'missing protocol identification header')
-        }
-    }, null)
-     */
 
     destructible.completed.wait(async())
 
@@ -45,10 +35,24 @@ function prove (async, assert) {
         })
         server.listen(8088, '127.0.0.1', async())
         destructible.destruct.wait(server, 'close')
+        destructible.destruct.wait(function () {
+            rendezvous.upgrade(null, {
+                destroy: function () {
+                    assert(true, 'was destroyed')
+                }
+            }, null)
+        })
+        rendezvous.upgrade({
+            headers: {}
+        }, {
+            destroy: function () {
+                assert(true, 'missing protocol identification header')
+            }
+        }, null)
     }, function () {
-        return [ async.break ]
         ua.fetch({
             url: 'http://127.0.0.1:8088/identifier/hello',
+            timeout: 1000
         }, async())
     }, function (body, response) {
         assert(response.statusCode, 404, 'http not found')
@@ -62,125 +66,51 @@ function prove (async, assert) {
         })
         delta(async()).ee(request).on('upgrade')
         request.end()
-    }, function (request, socket, head) {
-        var envoy = new Envoy(function (request, response) {
-            response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
-            response.write('Hello, World!')
-            response.end()
-        })
-        envoy.connect(request, socket, head, abend)
+    }, function (request, socket, header) {
         async(function () {
-            envoy.ready.wait(async())
-        }, function () {
-            ua.fetch({
-                url: 'http://127.0.0.1:8088/identifier/hello',
-                post: {}
-            }, async())
-        }, function (message) {
-            assert(message, 'Hello, World!', 'body')
-            envoy.close()
-            setTimeout(async(), 250)
-        }, function () {
-            rendezvous.destroy()
-        }, function () {
-            server.close(async())
-        }, function () {
-            rendezvous.upgrade(null, {
-                destroy: function () {
-                    assert(true, 'was destroyed')
-                }
-            }, null)
+            destructible.monitor([ 'envoy', 1 ], true, Envoy, function (request, response) {
+                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
+                response.write('Hello, World!')
+                response.end()
+            }, socket, header, async())
+        }, function (envoy) {
+            async(function () {
+                ua.fetch({
+                    url: 'http://127.0.0.1:8088/identifier/hello',
+                    post: {},
+                    timeout: 1000
+                }, async())
+            }, function (message) {
+                assert(message, 'Hello, World!', 'body')
+            })
         })
     }, function () {
-        return [ async.break ]
-        upgrader = new Upgrader
-        rendezvous = new Rendezvous
-        upgrader.on('socket', rendezvous.upgrade.bind(rendezvous))
-        server = http.createServer(function (request, response) {
-            rendezvous.middleware(request, response, function (error) {
-                response.writeHead(error ? 503 : 404, { 'content-type': 'text/plain' })
-                response.write('error')
-                response.end()
+        var request = http.request({
+            host: '127.0.0.1',
+            port: 8088,
+            headers: Envoy.headers('/identifier', {
+                host: '127.0.0.1:8088'
             })
         })
-        server.on('upgrade', function (request, socket, head) {
-            upgrader.upgrade(request, socket, head)
-        })
-        server.listen(8088, '127.0.0.1', async())
-    }, function () {
-        var envoy2, envoy1, envoy
+        delta(async()).ee(request).on('upgrade')
+        request.end()
+    }, function (request, socket, header) {
         async(function () {
-            var request = http.request({
-                host: '127.0.0.1',
-                port: 8088,
-                headers: Envoy.headers('/identifier/key', {
-                    host: '127.0.0.1:8088'
-                })
-            })
-            delta(async()).ee(request).on('upgrade')
-            request.end()
-        }, function (request, socket, head) {
-            envoy2 = new Envoy(function (request, response) {
-                assert(request.url, '/hello', 'hello')
+            destructible.monitor([ 'envoy', 1 ], true, Envoy, function (request, response) {
                 response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
                 response.write('Hello, World!')
                 response.end()
+            }, socket, header, async())
+        }, function (envoy) {
+            async(function () {
+                ua.fetch({
+                    url: 'http://127.0.0.1:8088/identifier/hello',
+                    post: {},
+                    timeout: 1000
+                }, async())
+            }, function (message) {
+                assert(message, 'Hello, World!', 'body')
             })
-            envoy2.connect(request, socket, head, abend)
-            envoy2.ready.wait(async())
-        }, function () {
-            var request = http.request({
-                host: '127.0.0.1',
-                port: 8088,
-                headers: Envoy.headers('/identifier', {
-                    host: '127.0.0.1:8088'
-                })
-            })
-            delta(async()).ee(request).on('upgrade')
-            request.end()
-        }, function (request, socket, head) {
-            envoy1 = new Envoy(function (request, response) {
-                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
-                response.write('Hello, World!')
-                response.end()
-            })
-            envoy1.connect(request, socket, head, abend)
-            envoy1.ready.wait(async())
-        }, function () {
-            var request = http.request({
-                host: '127.0.0.1',
-                port: 8088,
-                headers: Envoy.headers('/identifier', {
-                    host: '127.0.0.1:8088'
-                })
-            })
-            delta(async()).ee(request).on('upgrade')
-            request.end()
-        }, function (request, socket, head) {
-            envoy = new Envoy(function (request, response) {
-                response.writeHead(200, 'OK', { 'content-type': 'text/plain' })
-                response.write('Hello, World!')
-                response.end()
-            })
-            envoy.connect(request, socket, head, abend)
-            envoy.ready.wait(async())
-        }, function () {
-            envoy1.close()
-        }, function () {
-            setTimeout(async(), 1000)
-        }, function () {
-            ua.fetch({
-                url: 'http://127.0.0.1:8088/identifier/key/hello',
-                post: {}
-            }, async())
-        }, function (message, response) {
-            assert(message, 'Hello, World!', 'body')
-            rendezvous.destroy()
-        }, function () {
-            envoy.close()
-            envoy2.close()
-        }, function () {
-            server.close(async())
         })
     })
 }
