@@ -22,7 +22,7 @@
     {
                             "abend":                        "1.0.x",
                             "cadence":                      "1.0.x",
-                            "conduit":                      "2.5.x",
+                            "conduit":                      "2.6.x",
                             "delta":                        "1.2.x",
                             "destructible":                 "0.27.x",
                             "downgrader":                   "0.1.x",
