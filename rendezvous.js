@@ -64,10 +64,10 @@ Rendezvous.prototype._upgrade = cadence(function (async, destructible, request, 
         }, function () {
             destructible.monitor('requester', Requester, client, function (header) {
                 var location = url.parse(header.url)
-                var path = location.pathname
+                var actualPath = location.pathname
                 location.pathname = location.pathname.substring(path.length)
                 header.url = url.format(location)
-                header.addHTTPHeader('x-rendezvous-actual-path', path)
+                header.addHTTPHeader('x-rendezvous-actual-path', actualPath)
             }, async())
         }, function (requester) {
             var connection = {
